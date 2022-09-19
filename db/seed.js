@@ -138,6 +138,8 @@ async function testDB() {
     });
     console.log("Result:", updateUserResult);
 
+    
+
     // const users = await getAllUsers();
     // console.log("getAllUsers:", users);
     console.log("Finished database tests!");
@@ -146,6 +148,22 @@ async function testDB() {
     throw error;
   }
 }
+
+async function createInitialPosts() {
+    try {
+      const [albert, sandra, glamgal] = await getAllUsers();
+  
+      await createPost({
+        authorId: albert.id,
+        title: "First Post",
+        content: "This is my first post. I hope I love writing blogs as much as I love writing them."
+      });
+  
+      // a couple more
+    } catch (error) {
+      throw error;
+    }
+  }
 
 rebuildDB()
   .then(testDB)
