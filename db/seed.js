@@ -1,29 +1,41 @@
 // grab our client with destructuring from the export in index.js
-const { client, getAllUsers, createUser } = require("./index");
-
+const { client, getAllUsers, createUser, updateUser, createPost, getUserById } = require("./index");
 
 // new function, should attempt to create a few users
 async function createInitialUsers() {
-    try {
-      console.log("Starting to create users...");
-  
-      const albert = await createUser({ username: 'albert', password: 'bertie99' });
-      const albert2 = await createUser({ username: 'sandra', password: '2sandy4me' });
-      const albert3 = await createUser({ username: 'glamgal', password: 'soglam' });
+  try {
+    console.log("Starting to create users...");
+
+    const albert = await createUser({
+      username: "albert",
+      password: "bertie99",
+      name: "albert",
+      location: "california",
+    });
+    const albert2 = await createUser({
+      username: "sandra",
+      password: "2sandy4me",
+      name: "sandra",
+      location: "texas",
+    });
+    const albert3 = await createUser({
+      username: "glamgal",
+      password: "soglam",
+      name: "glam",
+      location: "florida",
+    });
 
     //   const albertTwo = await createUser({ username: 'Aldwin', password: 'imposter_albert' });
-
 
     //   console.log(albert3);
     //   console.log(albertTwo);
 
-  
-      console.log("Finished creating users!");
-    } catch(error) {
-      console.error("Error creating users!");
-      throw error;
-    }
+    console.log("Finished creating users!");
+  } catch (error) {
+    console.error("Error creating users!");
+    throw error;
   }
+}
 
 // then modify rebuildDB to call our new function
 async function rebuildDB() {
@@ -32,8 +44,9 @@ async function rebuildDB() {
 
     await dropTables();
     await createTables();
+    await createTablesPost();
     await createInitialUsers();
-
+    await getUserById(1)
   } catch (error) {
     throw error;
   }
@@ -44,6 +57,7 @@ async function dropTables() {
     console.log("Starting to drop tables...");
 
     await client.query(`
+            DROP TABLE IF EXISTS posts;
             DROP TABLE IF EXISTS users;
           `);
     console.log("Finished dropping tables!");
@@ -62,9 +76,36 @@ async function createTables() {
             CREATE TABLE users (
               id SERIAL PRIMARY KEY,
               username varchar(255) UNIQUE NOT NULL,
-              password varchar(255) NOT NULL
+              password varchar(255) NOT NULL,
+              name VARCHAR(255) NOT NULL,
+              location VARCHAR(255) NOT NULL,
+              active BOOLEAN DEFAULT true
+
             );
           `);
+    console.log("Finished building tables!");
+  } catch (error) {
+    console.error("Error building tables!");
+
+    throw error;
+  }
+}
+
+//create posts
+async function createTablesPost() {
+  try {
+    console.log("Starting to build tables...");
+
+    await client.query(`
+              CREATE TABLE posts (
+                id SERIAL PRIMARY KEY,
+                "authorId" INTEGER REFERENCES users(id) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                active BOOLEAN DEFAULT true
+  
+              );
+            `);
     console.log("Finished building tables!");
   } catch (error) {
     console.error("Error building tables!");
@@ -86,8 +127,19 @@ async function testDB() {
 
     console.log("Starting to test database...");
 
+    console.log("Calling getAllUsers");
     const users = await getAllUsers();
-    console.log("getAllUsers:", users);
+    console.log("Result:", users);
+
+    console.log("Calling updateUser on users[0]");
+    const updateUserResult = await updateUser(users[0].id, {
+      name: "Newname Sogood",
+      location: "Lesterville, KY",
+    });
+    console.log("Result:", updateUserResult);
+
+    // const users = await getAllUsers();
+    // console.log("getAllUsers:", users);
     console.log("Finished database tests!");
   } catch (error) {
     console.error("Error testing database!");
